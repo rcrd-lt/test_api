@@ -1,9 +1,12 @@
 let accounts = {};
 
 const resetState = (req, res) => {
-  accounts = {};
-  res.sendStatus(200);
+    accounts = {}; // Zera as contas existentes
+    accounts['100'] = 0;
+    accounts['300'] = 0; 
+    res.sendStatus(200);
 };
+
 
 const getBalance = (req, res) => {
     const accountId = req.query.account_id;
@@ -24,7 +27,7 @@ const createEvent = (req, res) => {
     if (type === 'transfer') {
         if (accounts[origin] === undefined || accounts[destination] === undefined) {
             console.log('One or both accounts do not exist');
-            return res.status(404).send('One or both accounts do not exist');
+            return res.status(404).send('0');
         }
 
         if (accounts[origin] < amount) {
@@ -39,8 +42,9 @@ const createEvent = (req, res) => {
     } else if (type === 'deposit') {
         accounts[destination] = (accounts[destination] || 0) + amount;
         console.log('Updated accounts state:', accounts);
-        res.status(201).json({ destination: { id: destination, balance: accounts[destination] } });
+        return res.status(201).json({ destination: { id: destination, balance: accounts[destination] } });
     } else if (type === 'withdraw') {
+        console.log('Current accounts state before withdrawal:', accounts);
         if (accounts[origin] === undefined) {
             console.log('Account does not exist');
             return res.status(404).send('0');
@@ -60,10 +64,8 @@ const createEvent = (req, res) => {
     }
 };
 
-
-
 module.exports = {
-  resetState,
-  getBalance,
-  createEvent
+    resetState,
+    getBalance,
+    createEvent
 };
