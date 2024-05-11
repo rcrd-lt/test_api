@@ -1,4 +1,3 @@
-// src/controllers.js
 let accounts = {};
 
 const resetState = (req, res) => {
@@ -23,36 +22,41 @@ const createEvent = (req, res) => {
     console.log('Current accounts state:', accounts);
 
     if (type === 'transfer') {
-        if (accounts[origin] !== undefined && accounts[destination] !== undefined) {
-            if (accounts[origin] >= amount) {
-                accounts[origin] -= amount;
-                accounts[destination] = (accounts[destination] || 0) + amount;
-                console.log('Updated accounts state:', accounts);
-                res.status(201).json({ origin: { id: origin, balance: accounts[origin] }, destination: { id: destination, balance: accounts[destination] } });
-            } else {
-                console.log('Insufficient balance for transfer');
-                res.status(404).send('0');
-            }
-        } else {
+        if (accounts[origin] === undefined || accounts[destination] === undefined) {
             console.log('One or both accounts do not exist');
-            res.status(404).send('0');
+            return res.status(404).send('One or both accounts do not exist');
         }
+
+        if (accounts[origin] < amount) {
+            console.log('Insufficient balance for transfer');
+            return res.status(404).send('Insufficient balance for transfer');
+        }
+
+        accounts[origin] -= amount;
+        accounts[destination] = (accounts[destination] || 0) + amount;
+        console.log('Updated accounts state:', accounts);
+        return res.status(201).json({ origin: { id: origin, balance: accounts[origin] }, destination: { id: destination, balance: accounts[destination] } });
     } else if (type === 'deposit') {
         accounts[destination] = (accounts[destination] || 0) + amount;
         console.log('Updated accounts state:', accounts);
         res.status(201).json({ destination: { id: destination, balance: accounts[destination] } });
     } else if (type === 'withdraw') {
-        if (accounts[origin] !== undefined && accounts[origin] >= amount) {
-            accounts[origin] -= amount;
-            console.log('Updated accounts state:', accounts);
-            res.status(201).json({ origin: { id: origin, balance: accounts[origin] } });
-        } else {
-            console.log('Insufficient balance for withdrawal or account does not exist');
-            res.status(404).send('0');
+        if (accounts[origin] === undefined) {
+            console.log('Account does not exist');
+            return res.status(404).send('0');
         }
+
+        if (accounts[origin] < amount) {
+            console.log('Insufficient balance for withdrawal');
+            return res.status(404).send('Insufficient balance for withdrawal');
+        }
+
+        accounts[origin] -= amount;
+        console.log('Updated accounts state:', accounts);
+        return res.status(201).json({ origin: { id: origin, balance: accounts[origin] } });
     } else {
         console.log('Unsupported event type');
-        res.status(400).send('Unsupported event type');
+        return res.status(400).send('Unsupported event type');
     }
 };
 
